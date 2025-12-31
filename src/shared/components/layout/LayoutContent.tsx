@@ -102,8 +102,10 @@ export const LayoutContent: React.FC<LayoutContentProps> = ({ children }) => {
         }
 
         try {
-          const ledger = await broker.ledger.getLedger();
-          if (!ledger || ledger.totalBalance === BigInt(0)) {
+          const { ledgerInfo } = await broker.ledger.ledger.getLedgerWithDetail();
+          // ledgerInfo[0] is totalBalance in neuron units
+          const totalBalance = ledgerInfo ? BigInt(ledgerInfo[0]) : BigInt(0);
+          if (totalBalance === BigInt(0)) {
             setShowDepositModal(true);
           } else {
             setShowDepositModal(false);

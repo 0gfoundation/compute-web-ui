@@ -1,8 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useChainId } from "wagmi";
-import { MessageSquare, SlidersHorizontal, Wallet, type LucideIcon } from "lucide-react";
+import { MessageSquare, Wallet, type LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -13,20 +12,13 @@ interface SidebarLink {
   icon: LucideIcon;
 }
 
-const allLinks: SidebarLink[] = [
+const links: SidebarLink[] = [
   { href: "/inference", label: "Inference", icon: MessageSquare },
-  { href: "/fine-tuning", label: "Fine-tuning", icon: SlidersHorizontal },
   { href: "/wallet", label: "Wallet", icon: Wallet },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
-  const chainId = useChainId();
-
-  // Filter out fine-tuning when on mainnet (chain ID 16661)
-  const links = allLinks.filter(link =>
-    link.href !== "/fine-tuning" || chainId !== 16661
-  );
 
   const isActive = (href: string) => {
     return pathname === href || pathname.startsWith(href + "/");

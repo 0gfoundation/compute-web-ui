@@ -10,7 +10,7 @@ const nextConfig = {
         unoptimized: true,
     },
     
-    webpack: (config, { isServer }) => {
+    webpack: (config, { isServer, webpack }) => {
         if (!isServer) {
             config.resolve.fallback = {
                 ...config.resolve.fallback,
@@ -20,18 +20,20 @@ const nextConfig = {
                 child_process: false,
                 'fs/promises': false,
                 crypto: false,
+                readline: false,
             }
-            // Handle node: protocol imports
-            config.resolve.alias = {
-                ...config.resolve.alias,
-                'node:crypto': false,
-                'node:buffer': false,
-                'node:stream': false,
-                'node:util': false,
-            }
-            
+
+            // Handle node: protocol imports by replacing them with empty modules
+            config.plugins.push(
+                new webpack.NormalModuleReplacementPlugin(
+                    /^node:/,
+                    (resource) => {
+                        resource.request = resource.request.replace(/^node:/, '');
+                    }
+                )
+            );
         }
-        
+
         return config
     },
     transpilePackages: ['@0glabs/0g-serving-broker'],

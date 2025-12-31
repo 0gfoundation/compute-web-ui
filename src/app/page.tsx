@@ -4,7 +4,7 @@ import React from "react";
 import { useAccount } from 'wagmi';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Cpu, Wrench, Wallet } from "lucide-react";
+import { Cpu, Wallet } from "lucide-react";
 import { OnboardingFlow } from "@/components/ui/onboarding-flow";
 import { use0GBroker } from "../shared/hooks/use0GBroker";
 
@@ -68,7 +68,7 @@ export default function Home() {
       )}
 
       {/* Feature Cards */}
-      <div className="grid md:grid-cols-3 gap-4 sm:gap-8">
+      <div className="grid md:grid-cols-2 gap-4 sm:gap-8 max-w-3xl mx-auto">
         <Card className="bg-white border-gray-200">
           <CardHeader className="flex flex-row items-center gap-3 sm:gap-4 p-4 sm:p-6">
             <Wallet className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 flex-shrink-0" />
@@ -103,22 +103,6 @@ export default function Home() {
           </CardFooter>
         </Card>
 
-        <Card className="bg-white border-gray-200">
-          <CardHeader className="flex flex-row items-center gap-3 sm:gap-4 p-4 sm:p-6">
-            <Wrench className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 flex-shrink-0" />
-            <CardTitle className="text-gray-900 text-base sm:text-lg">Fine-tuning</CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 sm:px-6 pb-2">
-            <CardDescription className="text-gray-600 text-sm">
-              Customize AI models with your own data for personalized use cases.
-            </CardDescription>
-          </CardContent>
-          <CardFooter className="p-4 sm:p-6 pt-2">
-            <Button variant="secondary" className="w-full bg-purple-50 text-purple-600 hover:bg-purple-100 text-sm" asChild>
-              <a href="/fine-tuning">Go to Fine-tuning</a>
-            </Button>
-          </CardFooter>
-        </Card>
       </div>
     </div>
   );
