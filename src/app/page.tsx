@@ -37,7 +37,7 @@ export default function Home() {
           Discover Decentralized AI
         </h1>
         <p className="max-w-2xl mx-auto text-sm sm:text-lg text-gray-600 mb-6 sm:mb-8 px-2">
-          Explore the future of AI with the 0G Compute Network. Run inference, fine-tune models, and manage your account seamlessly.
+          Explore the future of AI with the 0G Compute Network. Run inference and manage your account seamlessly.
         </p>
         {/* Only show these buttons if user has completed onboarding */}
         {isConnected && hasBalance && (

@@ -102,7 +102,13 @@ export const LayoutContent: React.FC<LayoutContentProps> = ({ children }) => {
         }
 
         try {
-          const { ledgerInfo } = await broker.ledger.ledger.getLedgerWithDetail();
+          // Check if broker.ledger.ledger exists (nested ledger accessor)
+          const ledgerAccessor = (broker.ledger as any)?.ledger;
+          if (!ledgerAccessor?.getLedgerWithDetail) {
+            setShowDepositModal(true);
+            return;
+          }
+          const { ledgerInfo } = await ledgerAccessor.getLedgerWithDetail();
           // ledgerInfo[0] is totalBalance in neuron units
           const totalBalance = ledgerInfo ? BigInt(ledgerInfo[0]) : BigInt(0);
           if (totalBalance === BigInt(0)) {
