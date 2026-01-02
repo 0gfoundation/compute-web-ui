@@ -29,6 +29,12 @@ const nextConfig = {
                 util: require.resolve('util/'),
             }
 
+            // Fix MetaMask SDK React Native dependency
+            config.resolve.alias = {
+                ...config.resolve.alias,
+                '@react-native-async-storage/async-storage': false,
+            }
+
             // Handle node: protocol imports by replacing with browser polyfills
             config.plugins.push(
                 new webpack.NormalModuleReplacementPlugin(
@@ -59,7 +65,7 @@ const nextConfig = {
     transpilePackages: ['@0glabs/0g-serving-broker'],
     output: 'export',
     trailingSlash: false, // Change to false for better SPA behavior
-    
+
     // Optimize bundle splitting
     experimental: {
         optimizePackageImports: ['dexie', '@0glabs/0g-serving-broker'],
