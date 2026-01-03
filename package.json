@@ -10,7 +10,7 @@
         "lint": "next lint"
     },
     "dependencies": {
-        "@0glabs/0g-serving-broker": "file:../officials/0g-serving-user-broker",
+        "@0glabs/0g-serving-broker": "^0.6.2",
         "@radix-ui/react-collapsible": "^1.1.12",
         "@radix-ui/react-dialog": "^1.1.15",
         "@radix-ui/react-slot": "^1.2.4",
