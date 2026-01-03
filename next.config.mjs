@@ -1,6 +1,3 @@
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     // Optimize for production performance
@@ -13,7 +10,7 @@ const nextConfig = {
         unoptimized: true,
     },
 
-    webpack: (config, { isServer, webpack }) => {
+    webpack: (config, { isServer }) => {
         if (!isServer) {
             config.resolve.fallback = {
                 ...config.resolve.fallback,
@@ -23,41 +20,17 @@ const nextConfig = {
                 child_process: false,
                 'fs/promises': false,
                 readline: false,
-                crypto: require.resolve('crypto-browserify'),
-                stream: require.resolve('stream-browserify'),
-                buffer: require.resolve('buffer/'),
-                util: require.resolve('util/'),
+                crypto: false,
             }
-
-            // Fix MetaMask SDK React Native dependency
+            // Handle node: protocol imports
             config.resolve.alias = {
                 ...config.resolve.alias,
-                '@react-native-async-storage/async-storage': false,
+                'node:crypto': false,
+                'node:buffer': false,
+                'node:stream': false,
+                'node:util': false,
             }
 
-            // Handle node: protocol imports by replacing with browser polyfills
-            config.plugins.push(
-                new webpack.NormalModuleReplacementPlugin(
-                    /^node:crypto$/,
-                    require.resolve('crypto-browserify')
-                ),
-                new webpack.NormalModuleReplacementPlugin(
-                    /^node:buffer$/,
-                    require.resolve('buffer/')
-                ),
-                new webpack.NormalModuleReplacementPlugin(
-                    /^node:stream$/,
-                    require.resolve('stream-browserify')
-                ),
-                new webpack.NormalModuleReplacementPlugin(
-                    /^node:util$/,
-                    require.resolve('util/')
-                ),
-                new webpack.ProvidePlugin({
-                    Buffer: ['buffer', 'Buffer'],
-                    process: 'process/browser',
-                })
-            );
         }
 
         return config
