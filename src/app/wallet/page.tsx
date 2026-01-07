@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StateDisplay } from '@/components/ui/state-display';
 import { BalanceCard, AddFundsForm, WithdrawDialog, FundDistribution } from './components';
+import { TransactionHistory, useTransactionHistory } from './components/TransactionHistory';
 import { Loader2 } from 'lucide-react';
 
 function LedgerContent() {
@@ -20,8 +21,9 @@ function LedgerContent() {
     depositFund,
   } = use0GBroker();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'detail'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'detail' | 'history'>('overview');
   const [expandedRefunds, setExpandedRefunds] = useState<{ [key: string]: boolean }>({});
+  const { transactions, isLoading: txLoading, refreshTransactions, addTransaction } = useTransactionHistory();
   const [refundDetails, setRefundDetails] = useState<{ [key: string]: { amount: bigint, remainTime: bigint }[] }>({});
   const [loadingRefunds, setLoadingRefunds] = useState<{ [key: string]: boolean }>({});
   const [isRetrieving, setIsRetrieving] = useState<{ [key: string]: boolean }>({});
@@ -35,6 +37,8 @@ function LedgerContent() {
     const tab = searchParams.get('tab');
     if (tab === 'transactions') {
       setActiveTab('detail');
+    } else if (tab === 'history') {
+      setActiveTab('history');
     } else {
       setActiveTab('overview');
     }
@@ -189,7 +193,7 @@ function LedgerContent() {
         <p className="text-xs text-gray-500">Manage your account balance and funding</p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'overview' | 'detail')}>
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'overview' | 'detail' | 'history')}>
         <div className="bg-white rounded-t-xl border border-gray-200">
           <div className="flex border-b border-gray-200">
             <TabsList className="bg-transparent p-0 h-auto">
@@ -204,6 +208,12 @@ function LedgerContent() {
                 className="px-6 py-4 font-medium text-sm rounded-none border-b-2 border-transparent transition-all relative data-[state=active]:border-purple-600 data-[state=active]:text-purple-600 data-[state=active]:bg-white data-[state=active]:shadow-none text-gray-600 hover:text-gray-900 hover:bg-gray-50"
               >
                 Fund Distribution
+              </TabsTrigger>
+              <TabsTrigger
+                value="history"
+                className="px-6 py-4 font-medium text-sm rounded-none border-b-2 border-transparent transition-all relative data-[state=active]:border-purple-600 data-[state=active]:text-purple-600 data-[state=active]:bg-white data-[state=active]:shadow-none text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+              >
+                History
               </TabsTrigger>
             </TabsList>
           </div>
@@ -244,6 +254,16 @@ function LedgerContent() {
                 error={error}
                 formatNumber={formatNumber}
                 formatTime={formatTime}
+              />
+            </TabsContent>
+
+            <TabsContent value="history" className="mt-0">
+              <TransactionHistory
+                transactions={transactions}
+                isLoading={txLoading}
+                onRefresh={refreshTransactions}
+                formatNumber={formatNumber}
+                explorerBaseUrl="https://chainscan-newton.0g.ai"
               />
             </TabsContent>
         </div>

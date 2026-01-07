@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useCallback, useState, useEffect } from 'react';
-import { Square } from 'lucide-react';
+import React, { useCallback, useState, useEffect, useMemo } from 'react';
+import { Square, Info } from 'lucide-react';
+import { estimateMessageCost, formatCost, estimateTokens } from '../../../../shared/utils/tokenEstimation';
 
 interface ChatInputProps {
   inputMessage: string;
@@ -10,6 +11,9 @@ interface ChatInputProps {
   isStreaming?: boolean;
   onSendMessage: () => void;
   onStopGeneration?: () => void;
+  // Optional pricing info for cost estimation
+  inputPrice?: number;
+  outputPrice?: number;
 }
 
 export function ChatInput({
@@ -19,6 +23,8 @@ export function ChatInput({
   isStreaming = false,
   onSendMessage,
   onStopGeneration,
+  inputPrice,
+  outputPrice,
 }: ChatInputProps) {
   // Force client-side rendering to prevent hydration issues
   const [isClient, setIsClient] = useState(false);
@@ -32,6 +38,18 @@ export function ChatInput({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Estimate cost based on current input
+  const estimatedCost = useMemo(() => {
+    if (!inputMessage.trim() || (inputPrice === undefined && outputPrice === undefined)) {
+      return null;
+    }
+    return estimateMessageCost(inputMessage, inputPrice, outputPrice);
+  }, [inputMessage, inputPrice, outputPrice]);
+
+  const tokenCount = useMemo(() => {
+    return estimateTokens(inputMessage);
+  }, [inputMessage]);
 
   // Memoize the textarea change handler with debouncing for resize
   const handleTextareaChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -77,6 +95,16 @@ export function ChatInput({
 
   return (
     <div className="p-2 sm:p-4 border-t border-gray-200">
+      {/* Cost estimation */}
+      {estimatedCost !== null && inputMessage.trim().length > 0 && !isProcessing && (
+        <div className="flex items-center gap-1 text-xs text-gray-500 mb-2 px-1">
+          <Info className="h-3 w-3" />
+          <span>
+            Est. cost: ~{formatCost(estimatedCost)} 0G
+            <span className="text-gray-400 ml-2">({tokenCount} tokens)</span>
+          </span>
+        </div>
+      )}
       <div className="flex space-x-2 sm:space-x-3 items-end">
         <textarea
           value={inputMessage}

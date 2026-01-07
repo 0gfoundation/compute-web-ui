@@ -411,9 +411,272 @@ export function useMessageHandling(config: MessageHandlingConfig) {
     }
   };
 
+  // Resend a message with given content and context (for edit/regenerate)
+  const resendMessage = useCallback(async (content: string, contextMessages: Message[]) => {
+    if (!content.trim() || !selectedProvider || !broker) {
+      return;
+    }
+
+    // Create user message
+    const userMessage: Message = {
+      role: "user",
+      content: content,
+      timestamp: Date.now(),
+    };
+
+    // Add user message to UI
+    setMessages([...contextMessages, userMessage]);
+
+    // Save user message to database and get session ID
+    let currentSessionForAssistant: string | null = null;
+    try {
+      currentSessionForAssistant = await chatHistory.addMessage({
+        role: userMessage.role,
+        content: userMessage.content,
+        chat_id: undefined,
+        is_verified: null,
+        is_verifying: false,
+      });
+    } catch {
+      // Silent fail for database operations
+    }
+
+    // Start loading
+    setIsLoading(true);
+    setIsStreaming(true);
+    setErrorWithTimeout(null);
+
+    let firstContentReceived = false;
+
+    // Create new AbortController for this request
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+
+    try {
+      // Get service metadata
+      let currentMetadata = serviceMetadata;
+      if (!currentMetadata) {
+        currentMetadata = await broker.inference.getServiceMetadata(
+          selectedProvider.address
+        );
+        if (!currentMetadata) {
+          throw new Error("Failed to get service metadata");
+        }
+      }
+
+      // Prepare messages for API (context + new user message)
+      const messagesToSend = [
+        ...contextMessages
+          .filter((m) => m.role !== "system")
+          .map((m) => ({ role: m.role, content: m.content })),
+        { role: userMessage.role, content: userMessage.content },
+      ];
+
+      // Get request headers
+      let headers;
+      try {
+        headers = await broker.inference.getRequestHeaders(
+          selectedProvider.address,
+          JSON.stringify(messagesToSend)
+        );
+      } catch (headerError) {
+        throw headerError;
+      }
+
+      // Send request to service
+      const { endpoint, model } = currentMetadata;
+      const response = await fetch(`${endpoint}/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...headers,
+        },
+        body: JSON.stringify({
+          messages: messagesToSend,
+          model: model,
+          stream: true,
+        }),
+        signal,
+      });
+
+      if (!response.ok) {
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorBody = await response.text();
+          if (errorBody) {
+            try {
+              const errorJson = JSON.parse(errorBody);
+              errorMessage = JSON.stringify(errorJson, null, 2);
+            } catch {
+              errorMessage = errorBody;
+            }
+          }
+        } catch {
+          // Keep original message if can't read body
+        }
+        throw new Error(errorMessage);
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error("Failed to get response reader");
+      }
+
+      // Initialize streaming response
+      const assistantMessage: Message = {
+        role: "assistant",
+        content: "",
+        timestamp: Date.now(),
+        isVerified: null,
+        isVerifying: false,
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+
+      // Process streaming response
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let chatId = response.headers.get("ZG-Res-Key") || "";
+      let completeContent = "";
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              const data = line.slice(6);
+              if (data === "[DONE]") continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                if (!chatId && parsed.id) {
+                  chatId = parsed.id;
+                }
+
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  if (!firstContentReceived) {
+                    setIsLoading(false);
+                    firstContentReceived = true;
+                  }
+
+                  completeContent += content;
+                  setMessages((prev) =>
+                    prev.map((msg, index) =>
+                      index === prev.length - 1
+                        ? {
+                            ...msg,
+                            content: completeContent,
+                            chatId,
+                            isVerified: msg.isVerified,
+                            isVerifying: msg.isVerifying,
+                          }
+                        : msg
+                    )
+                  );
+
+                  setTimeout(() => {
+                    if (!isUserScrollingRef.current) {
+                      messagesEndRef.current?.scrollIntoView({
+                        behavior: "smooth",
+                      });
+                    }
+                  }, 50);
+                }
+              } catch {
+                // Skip invalid JSON
+              }
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+
+      // Update final message
+      setMessages((prev) =>
+        prev.map((msg, index) =>
+          index === prev.length - 1
+            ? {
+                ...msg,
+                content: completeContent,
+                chatId,
+                isVerified: msg.isVerified || null,
+                isVerifying: msg.isVerifying || false,
+              }
+            : msg
+        )
+      );
+
+      // Save assistant message to database
+      if (completeContent.trim() && currentSessionForAssistant) {
+        try {
+          const { dbManager } = await import('../lib/database');
+          await dbManager.saveMessage(currentSessionForAssistant, {
+            role: "assistant",
+            content: completeContent,
+            timestamp: Date.now(),
+            chat_id: chatId,
+            is_verified: null,
+            is_verifying: false,
+            provider_address: selectedProvider?.address || '',
+          });
+        } catch {
+          // Silent fail for database operations
+        }
+      }
+
+      if (!firstContentReceived) {
+        setIsLoading(false);
+      }
+      setIsStreaming(false);
+      abortControllerRef.current = null;
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        setIsLoading(false);
+        setIsStreaming(false);
+        abortControllerRef.current = null;
+        return;
+      }
+
+      let errorMessage = "Failed to send message. Please try again.";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      } else if (err && typeof err === 'object') {
+        try {
+          errorMessage = JSON.stringify(err, null, 2);
+        } catch {
+          errorMessage = String(err);
+        }
+      }
+
+      setErrorWithTimeout(`Chat error: ${errorMessage}`);
+
+      setMessages((prev) =>
+        prev.filter((msg) => msg.role !== "assistant" || msg.content !== "")
+      );
+
+      if (!firstContentReceived) {
+        setIsLoading(false);
+      }
+      setIsStreaming(false);
+      abortControllerRef.current = null;
+    }
+  }, [broker, selectedProvider, serviceMetadata, chatHistory, setMessages, setIsLoading, setIsStreaming, setErrorWithTimeout, isUserScrollingRef, messagesEndRef]);
+
   return {
     sendMessage,
     verifyResponse,
     stopGeneration,
+    resendMessage,
   };
 }

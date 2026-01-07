@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useState } from "react";
 import { a0giToNeuron } from "../../../../shared/utils/currency";
 import {
   Dialog,
@@ -19,6 +20,14 @@ import {
 } from "@/components/ui/tooltip";
 import { Loader2, HelpCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+// Preset amounts for quick top-up
+const TOPUP_PRESETS = [
+  { value: 1, label: '1 0G' },
+  { value: 5, label: '5 0G' },
+  { value: 10, label: '10 0G' },
+  { value: 25, label: '25 0G' },
+];
 
 interface Provider {
   address: string;
@@ -83,6 +92,17 @@ export function TopUpModal({
   setErrorWithTimeout,
 }: TopUpModalProps) {
   const { toast } = useToast();
+  const [selectedPreset, setSelectedPreset] = useState<number | null>(null);
+
+  const handlePresetClick = (presetValue: number) => {
+    setSelectedPreset(presetValue);
+    setTopUpAmount(presetValue.toString());
+  };
+
+  const handleCustomInput = (value: string) => {
+    setTopUpAmount(value);
+    setSelectedPreset(null);
+  };
 
   const handleTopUp = async () => {
     if (!broker || !selectedProvider || !topUpAmount || parseFloat(topUpAmount) <= 0) {
@@ -138,6 +158,7 @@ export function TopUpModal({
     if (!open && !isTopping) {
       onClose();
       setTopUpAmount("");
+      setSelectedPreset(null);
     }
   };
 
@@ -196,20 +217,49 @@ export function TopUpModal({
             </a>)
           </div>
 
-          <div className="relative">
-            <Input
-              type="number"
-              id="top-up-amount"
-              value={topUpAmount}
-              onChange={(e) => setTopUpAmount(e.target.value)}
-              placeholder={providerPendingRefund && providerPendingRefund > 0 ? "" : "Min 1 0G"}
-              min="1"
-              step="0.000001"
-              className="pr-12"
-              disabled={isTopping}
-            />
-            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-              <span className="text-gray-500 text-sm">0G</span>
+          {/* Quick top-up preset amounts */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-2">
+              Quick Top-up
+            </label>
+            <div className="grid grid-cols-4 gap-2">
+              {TOPUP_PRESETS.map((preset) => (
+                <button
+                  key={preset.value}
+                  onClick={() => handlePresetClick(preset.value)}
+                  disabled={isTopping}
+                  className={`px-2 py-2 rounded-lg border text-xs font-medium transition-all ${
+                    selectedPreset === preset.value
+                      ? 'bg-purple-100 border-purple-500 text-purple-700'
+                      : 'bg-white border-gray-200 text-gray-700 hover:border-purple-300 hover:bg-purple-50'
+                  } ${isTopping ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                >
+                  <div className="font-semibold">{preset.label}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Custom amount input */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Custom Amount
+            </label>
+            <div className="relative">
+              <Input
+                type="number"
+                id="top-up-amount"
+                value={topUpAmount}
+                onChange={(e) => handleCustomInput(e.target.value)}
+                placeholder="Enter amount"
+                min="1"
+                step="0.000001"
+                className="pr-12"
+                disabled={isTopping}
+              />
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <span className="text-gray-500 text-sm">0G</span>
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-1 text-xs text-gray-400">
