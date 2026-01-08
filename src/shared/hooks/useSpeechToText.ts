@@ -1,5 +1,72 @@
 import { useState, useCallback, useRef } from 'react';
 
+// Supported audio formats by the Whisper API
+const SUPPORTED_FORMATS = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/mp4', 'audio/m4a', 'audio/flac'];
+
+// Convert audio file to WAV format using Web Audio API
+async function convertToWav(file: File): Promise<File> {
+  const audioContext = new AudioContext();
+  const arrayBuffer = await file.arrayBuffer();
+  const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+  // Create WAV file
+  const wavBuffer = audioBufferToWav(audioBuffer);
+  const wavBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+  const wavFileName = file.name.replace(/\.[^.]+$/, '.wav');
+
+  await audioContext.close();
+  return new File([wavBlob], wavFileName, { type: 'audio/wav' });
+}
+
+// Convert AudioBuffer to WAV format
+function audioBufferToWav(buffer: AudioBuffer): ArrayBuffer {
+  const numChannels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const format = 1; // PCM
+  const bitDepth = 16;
+
+  const bytesPerSample = bitDepth / 8;
+  const blockAlign = numChannels * bytesPerSample;
+  const dataLength = buffer.length * blockAlign;
+  const bufferLength = 44 + dataLength;
+
+  const arrayBuffer = new ArrayBuffer(bufferLength);
+  const view = new DataView(arrayBuffer);
+
+  // WAV header
+  writeString(view, 0, 'RIFF');
+  view.setUint32(4, 36 + dataLength, true);
+  writeString(view, 8, 'WAVE');
+  writeString(view, 12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, format, true);
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * blockAlign, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitDepth, true);
+  writeString(view, 36, 'data');
+  view.setUint32(40, dataLength, true);
+
+  // Write audio data
+  const offset = 44;
+  for (let i = 0; i < buffer.length; i++) {
+    for (let channel = 0; channel < numChannels; channel++) {
+      const sample = buffer.getChannelData(channel)[i];
+      const intSample = Math.max(-1, Math.min(1, sample)) * 0x7FFF;
+      view.setInt16(offset + (i * blockAlign) + (channel * bytesPerSample), intSample, true);
+    }
+  }
+
+  return arrayBuffer;
+}
+
+function writeString(view: DataView, offset: number, string: string): void {
+  for (let i = 0; i < string.length; i++) {
+    view.setUint8(offset + i, string.charCodeAt(i));
+  }
+}
+
 interface Provider {
   address: string;
   name: string;
@@ -78,9 +145,17 @@ export function useSpeechToText(config: SpeechToTextConfig) {
         }
       }
 
+      // Convert unsupported formats (like WebM) to WAV
+      let audioFile = file;
+      if (!SUPPORTED_FORMATS.includes(file.type)) {
+        console.log(`Converting ${file.type} to WAV format...`);
+        audioFile = await convertToWav(file);
+        console.log(`Converted to WAV: ${audioFile.name}`);
+      }
+
       // Prepare form data
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', audioFile, audioFile.name);  // Explicit filename for proper Content-Disposition header
       formData.append('model', currentMetadata.model);
       formData.append('response_format', responseFormat);
       if (language) {
@@ -91,7 +166,7 @@ export function useSpeechToText(config: SpeechToTextConfig) {
       // For multipart/form-data, we need to pass a placeholder for content
       const headers = await broker.inference.getRequestHeaders(
         selectedProvider.address,
-        JSON.stringify({ model: currentMetadata.model, file: file.name })
+        JSON.stringify({ model: currentMetadata.model, file: audioFile.name })
       );
 
       // Remove Content-Type header - let browser set it for multipart/form-data
