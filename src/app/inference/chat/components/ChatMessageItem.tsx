@@ -59,7 +59,7 @@ function CodeBlock({
 
   if (inline) {
     return (
-      <code className="bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded text-xs font-mono">
+      <code className="bg-secondary text-primary px-1.5 py-0.5 rounded text-xs font-mono">
         {children}
       </code>
     );
@@ -114,13 +114,13 @@ function CodeBlock({
 function Avatar({ role }: { role: "user" | "assistant" }) {
   if (role === "user") {
     return (
-      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
-        <User className="w-4 h-4 text-purple-600" />
+      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-secondary flex items-center justify-center border border-border">
+        <User className="w-4 h-4 text-primary" />
       </div>
     );
   }
   return (
-    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-brand flex items-center justify-center shadow-glow">
       <Bot className="w-4 h-4 text-white" />
     </div>
   );
@@ -199,10 +199,10 @@ const ChatMessageItem = memo(function ChatMessageItem({
 
         <div className="flex flex-col gap-1 min-w-0">
           <div
-            className={`rounded-lg px-4 py-2 break-words transition-colors overflow-hidden min-w-0 ${
+            className={`rounded-2xl px-4 py-3 break-words transition-all duration-200 overflow-hidden min-w-0 ${
               message.role === "user"
-                ? "bg-purple-600 text-white"
-                : "bg-gray-100 text-gray-900"
+                ? "bg-gradient-brand text-white shadow-md"
+                : "bg-card text-foreground border border-border"
             }`}
             style={{ overflowWrap: "break-word", wordBreak: "break-word" }}
             data-message-content={message.content.substring(0, 100)}

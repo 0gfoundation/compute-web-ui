@@ -126,11 +126,18 @@ function ImageGenContent() {
     return (
         <div className="w-full">
             {/* Header */}
-            <div className="mb-4">
-                <h1 className="text-lg font-semibold text-gray-900">Image Generation</h1>
-                <p className="text-xs text-gray-500">
-                    Generate images from text prompts using decentralized AI providers
-                </p>
+            <div className="mb-6">
+                <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-brand flex items-center justify-center">
+                        <ImageIcon className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                        <h1 className="text-xl font-semibold text-foreground">Image Generation</h1>
+                        <p className="text-sm text-muted-foreground">
+                            Create images from text prompts using decentralized AI
+                        </p>
+                    </div>
+                </div>
             </div>
 
             {/* Error Display */}
@@ -237,7 +244,8 @@ function ImageGenContent() {
 
                         {/* Generate Button */}
                         <Button
-                            className="w-full bg-purple-600 hover:bg-purple-700"
+                            variant="gradient"
+                            className="w-full"
                             size="lg"
                             onClick={handleGenerate}
                             disabled={!prompt.trim() || isGenerating || !selectedProvider}
@@ -282,11 +290,13 @@ function ImageGenContent() {
                         <Card className="overflow-hidden">
                             <CardContent className="p-0">
                                 {isGenerating ? (
-                                    <div className="aspect-square flex items-center justify-center bg-gray-50">
+                                    <div className="aspect-square flex items-center justify-center bg-secondary">
                                         <div className="text-center">
-                                            <Loader2 className="h-12 w-12 animate-spin text-purple-600 mx-auto mb-4" />
-                                            <p className="text-sm text-gray-600">Generating your image...</p>
-                                            <p className="text-xs text-gray-400 mt-1">This may take a few seconds</p>
+                                            <div className="w-16 h-16 rounded-full bg-gradient-brand flex items-center justify-center mx-auto mb-4 animate-pulse-glow">
+                                                <Loader2 className="h-8 w-8 animate-spin text-white" />
+                                            </div>
+                                            <p className="text-sm text-foreground font-medium">Generating your image...</p>
+                                            <p className="text-xs text-muted-foreground mt-1">This may take a few seconds</p>
                                         </div>
                                     </div>
                                 ) : currentImage ? (
@@ -325,10 +335,12 @@ function ImageGenContent() {
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="aspect-square flex items-center justify-center bg-gray-50">
-                                        <div className="text-center text-gray-400">
-                                            <ImageIcon className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                                            <p className="text-sm">Your generated image will appear here</p>
+                                    <div className="aspect-square flex items-center justify-center bg-secondary/50">
+                                        <div className="text-center text-muted-foreground">
+                                            <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center mx-auto mb-4">
+                                                <ImageIcon className="h-8 w-8 opacity-50" />
+                                            </div>
+                                            <p className="text-sm font-medium text-foreground">Your image will appear here</p>
                                             <p className="text-xs mt-1">Enter a prompt and click Generate</p>
                                         </div>
                                     </div>
@@ -402,7 +414,7 @@ export default function ImageGenPage() {
     return (
         <Suspense fallback={
             <div className="w-full flex items-center justify-center p-8">
-                <LoaderIcon className="h-8 w-8 animate-spin text-purple-600" />
+                <LoaderIcon className="h-8 w-8 animate-spin text-primary" />
             </div>
         }>
             <ImageGenContent />

@@ -14,9 +14,7 @@ import { StateDisplay, NoticeBar } from '@/components/ui/state-display'
 import { ProviderCard } from './ProviderCard'
 import { BuildDrawer } from './BuildDrawer'
 import { ProviderFilters, VerificationFilter, ServiceTypeFilter, SortOption } from './ProviderFilters'
-import { ProviderCompare, useProviderCompare } from './ProviderCompare'
-import { Button } from '@/components/ui/button'
-import { Scale, X } from 'lucide-react'
+import { Cpu } from 'lucide-react'
 
 // Helper to get recently used providers from localStorage
 const getRecentlyUsedProviders = (): string[] => {
@@ -43,16 +41,6 @@ export function OptimizedInferencePage() {
     const [verificationFilter, setVerificationFilter] = useState<VerificationFilter>('all')
     const [serviceTypeFilter, setServiceTypeFilter] = useState<ServiceTypeFilter>('all')
     const [sortOption, setSortOption] = useState<SortOption>('name-asc')
-
-    // Provider comparison
-    const {
-        isCompareOpen,
-        selectedForCompare,
-        toggleProviderForCompare,
-        openCompare,
-        closeCompare,
-        clearCompare,
-    } = useProviderCompare()
 
     // Optimized providers data fetching with chain awareness
     const {
@@ -235,12 +223,18 @@ export function OptimizedInferencePage() {
         <TooltipProvider>
             <div className="w-full">
                 {/* Header */}
-                <div className="mb-3">
-                    <h1 className="text-lg font-semibold text-gray-900">Inference</h1>
-                    <p className="text-xs text-gray-500">
-                        Choose from decentralized AI providers to start chatting or
-                        integrate the service into your own application
-                    </p>
+                <div className="mb-6">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-brand flex items-center justify-center">
+                            <Cpu className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-semibold text-foreground">AI Providers</h1>
+                            <p className="text-sm text-muted-foreground">
+                                Choose from decentralized providers to access AI services
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Error notice */}
@@ -272,7 +266,7 @@ export function OptimizedInferencePage() {
                         />
 
                         {/* Provider cards grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                             {filteredAndSortedProviders.map((provider) => {
                                 const isOfficial = OFFICIAL_PROVIDERS.some(
                                     (op) => op.address === provider.address
@@ -292,8 +286,6 @@ export function OptimizedInferencePage() {
                                         onBuild={handleBuildWithProvider}
                                         onImageGen={handleImageGenWithProvider}
                                         onSpeechToText={handleSpeechToTextWithProvider}
-                                        isSelectedForCompare={selectedForCompare.includes(provider.address)}
-                                        onToggleCompare={toggleProviderForCompare}
                                     />
                                 )
                             })}
@@ -324,47 +316,6 @@ export function OptimizedInferencePage() {
                     provider={selectedProviderForBuild}
                     isOpen={isDrawerOpen}
                     onClose={handleCloseDrawer}
-                />
-
-                {/* Floating Compare Button */}
-                {selectedForCompare.length > 0 && (
-                    <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2">
-                        <div className="bg-white rounded-full shadow-lg border border-gray-200 px-4 py-2 flex items-center gap-3">
-                            <span className="text-sm text-gray-600">
-                                {selectedForCompare.length} provider{selectedForCompare.length > 1 ? 's' : ''} selected
-                            </span>
-                            <Button
-                                size="sm"
-                                className="bg-purple-600 hover:bg-purple-700"
-                                onClick={openCompare}
-                                disabled={selectedForCompare.length < 2}
-                            >
-                                <Scale className="h-4 w-4 mr-1.5" />
-                                Compare
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-8 w-8 p-0"
-                                onClick={clearCompare}
-                            >
-                                <X className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    </div>
-                )}
-
-                {/* Provider Comparison Modal */}
-                <ProviderCompare
-                    isOpen={isCompareOpen}
-                    onClose={closeCompare}
-                    providers={allProviders}
-                    selectedProviders={selectedForCompare}
-                    onToggleProvider={toggleProviderForCompare}
-                    onSelectProvider={(provider) => {
-                        handleChatWithProvider(provider)
-                    }}
-                    officialAddresses={OFFICIAL_PROVIDERS.map(p => p.address)}
                 />
             </div>
         </TooltipProvider>

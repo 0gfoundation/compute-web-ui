@@ -287,19 +287,26 @@ export default function SpeechToTextPage() {
     if (!isLoading && providers.length === 0) {
         return (
             <div className="w-full">
-                <div className="mb-3">
-                    <h1 className="text-lg font-semibold text-gray-900">Speech to Text</h1>
-                    <p className="text-xs text-gray-500">
-                        Transcribe audio files using decentralized AI providers
-                    </p>
+                <div className="mb-6">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-brand flex items-center justify-center">
+                            <Mic className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-semibold text-foreground">Speech to Text</h1>
+                            <p className="text-sm text-muted-foreground">
+                                Transcribe audio using decentralized AI
+                            </p>
+                        </div>
+                    </div>
                 </div>
                 <Card>
                     <CardContent className="flex flex-col items-center justify-center py-16">
-                        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                            <Mic className="h-8 w-8 text-gray-400" />
+                        <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center mb-4">
+                            <Mic className="h-8 w-8 text-muted-foreground" />
                         </div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">No Providers Available</h3>
-                        <p className="text-sm text-gray-500 text-center max-w-md">
+                        <h3 className="text-lg font-semibold text-foreground mb-2">No Providers Available</h3>
+                        <p className="text-sm text-muted-foreground text-center max-w-md">
                             There are currently no speech-to-text providers available. Please try again later.
                         </p>
                     </CardContent>
@@ -311,11 +318,18 @@ export default function SpeechToTextPage() {
     return (
         <div className="w-full">
             {/* Header */}
-            <div className="mb-3">
-                <h1 className="text-lg font-semibold text-gray-900">Speech to Text</h1>
-                <p className="text-xs text-gray-500">
-                    Transcribe audio files using decentralized AI providers
-                </p>
+            <div className="mb-6">
+                <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-brand flex items-center justify-center">
+                        <Mic className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                        <h1 className="text-xl font-semibold text-foreground">Speech to Text</h1>
+                        <p className="text-sm text-muted-foreground">
+                            Transcribe audio using decentralized AI
+                        </p>
+                    </div>
+                </div>
             </div>
 
             {/* Loading state */}
@@ -383,8 +397,8 @@ export default function SpeechToTextPage() {
                                         </div>
                                         <Button
                                             size="sm"
+                                            variant="default"
                                             onClick={() => setShowTopUpModal(true)}
-                                            className="bg-purple-600 hover:bg-purple-700"
                                             disabled={!selectedProvider}
                                         >
                                             <Plus className="h-4 w-4" />
@@ -519,7 +533,8 @@ export default function SpeechToTextPage() {
                                 <Button
                                     onClick={handleTranscribe}
                                     disabled={!selectedFile || !selectedProvider || isTranscribing}
-                                    className="w-full mt-4 bg-purple-600 hover:bg-purple-700"
+                                    variant="gradient"
+                                    className="w-full mt-4"
                                 >
                                     {isTranscribing ? (
                                         <>

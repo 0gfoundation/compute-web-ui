@@ -17,11 +17,10 @@ import {
     Loader2,
     Clock,
     TrendingDown,
-    Scale,
     Image,
     Mic,
+    Shield,
 } from 'lucide-react'
-import { Checkbox } from '@/components/ui/checkbox'
 import { cn, copyToClipboard } from '@/lib/utils'
 import type { Provider } from '@/shared/types/broker'
 
@@ -36,8 +35,6 @@ interface ProviderCardProps {
     onBuild?: (provider: Provider) => void
     onImageGen?: (provider: Provider) => void
     onSpeechToText?: (provider: Provider) => void
-    isSelectedForCompare?: boolean
-    onToggleCompare?: (address: string) => void
 }
 
 export function ProviderCard({
@@ -51,8 +48,6 @@ export function ProviderCard({
     onBuild,
     onImageGen,
     onSpeechToText,
-    isSelectedForCompare = false,
-    onToggleCompare,
 }: ProviderCardProps) {
     const isVerified = provider.teeSignerAcknowledged ?? false
     const isDisabled = !isVerified
@@ -74,76 +69,50 @@ export function ProviderCard({
     return (
         <Card
             className={cn(
-                'relative transition-shadow',
+                'relative group',
                 isDisabled
                     ? 'opacity-60 cursor-not-allowed'
-                    : 'hover:shadow-lg cursor-pointer'
+                    : 'hover:shadow-glow'
             )}
         >
             <CardContent className="p-5">
-                {/* Top right actions */}
-                <div className="absolute top-2 right-2 flex items-center gap-2">
-                    {/* Loading indicator */}
-                    {isLoading && (
-                        <Loader2 className="h-3 w-3 animate-spin text-purple-600" />
-                    )}
-                    {/* Compare checkbox */}
-                    {onToggleCompare && (
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <div
-                                    className={cn(
-                                        "flex items-center gap-1 px-1.5 py-1 rounded-md cursor-pointer transition-colors",
-                                        isSelectedForCompare
-                                            ? "bg-purple-100 text-purple-600"
-                                            : "hover:bg-gray-100 text-gray-400"
-                                    )}
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        onToggleCompare(provider.address)
-                                    }}
-                                >
-                                    <Scale className="h-3.5 w-3.5" />
-                                    <Checkbox
-                                        checked={isSelectedForCompare}
-                                        className="h-3.5 w-3.5 border-current data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
-                                        onClick={(e) => e.stopPropagation()}
-                                    />
-                                </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>{isSelectedForCompare ? 'Remove from comparison' : 'Add to comparison'}</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    )}
-                </div>
+                {/* Loading indicator */}
+                {isLoading && (
+                    <div className="absolute top-3 right-3">
+                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    </div>
+                )}
 
                 {/* Header with name and badges */}
                 <div className="flex items-start justify-between mb-4">
                     <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <h3 className="text-base font-semibold text-gray-900 truncate">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                            <h3 className="text-base font-semibold text-foreground truncate">
                                 {provider.name}
                             </h3>
                             {isOfficial && (
-                                <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100 border-0 px-1.5 py-0.5 text-xs">
-                                    0G
+                                <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-0 px-2 py-0.5 text-xs font-medium">
+                                    0G Official
                                 </Badge>
                             )}
-                            <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-0 px-1.5 py-0.5 text-xs">
-                                {provider.verifiability}
-                            </Badge>
-                            {!isVerified && (
-                                <Badge className="bg-red-100 text-red-800 hover:bg-red-100 border-0 px-1.5 py-0.5 text-xs">
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                            {isVerified ? (
+                                <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-0 px-1.5 py-0.5 text-xs flex items-center gap-1">
+                                    <Shield className="h-3 w-3" />
+                                    {provider.verifiability}
+                                </Badge>
+                            ) : (
+                                <Badge className="bg-red-100 text-red-700 hover:bg-red-100 border-0 px-1.5 py-0.5 text-xs">
                                     Unverified
                                 </Badge>
                             )}
                             {isRecentlyUsed && (
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-0 px-1.5 py-0.5 text-xs flex items-center gap-1">
+                                        <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-0 px-1.5 py-0.5 text-xs flex items-center gap-1">
                                             <Clock className="h-3 w-3" />
-                                            Recently Used{usageCount && usageCount > 1 ? ` (${usageCount}x)` : ''}
+                                            Recent{usageCount && usageCount > 1 ? ` (${usageCount}x)` : ''}
                                         </Badge>
                                     </TooltipTrigger>
                                     <TooltipContent>
@@ -154,9 +123,9 @@ export function ProviderCard({
                             {isCheapest && (
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border-0 px-1.5 py-0.5 text-xs flex items-center gap-1">
+                                        <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-0 px-1.5 py-0.5 text-xs flex items-center gap-1">
                                             <TrendingDown className="h-3 w-3" />
-                                            Cheapest
+                                            Best Value
                                         </Badge>
                                     </TooltipTrigger>
                                     <TooltipContent>
@@ -167,17 +136,17 @@ export function ProviderCard({
                         </div>
 
                         {/* Pricing and address */}
-                        <div className="flex items-center gap-2 flex-wrap min-h-[28px]">
+                        <div className="flex items-center gap-2 flex-wrap mt-3">
                             {/* Pricing section - improved clarity */}
                             {(provider.inputPrice !== undefined ||
                                 provider.outputPrice !== undefined) && (
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <div className="flex items-center gap-2 text-xs bg-gray-50 px-2 py-1 rounded cursor-help">
+                                        <div className="flex items-center gap-2 text-xs bg-secondary px-2.5 py-1.5 rounded-lg cursor-help font-mono">
                                             {isImageService ? (
                                                 <div className="flex items-center gap-1">
-                                                    <span className="text-gray-600">Price:</span>
-                                                    <span className="font-semibold text-gray-900">
+                                                    <span className="text-muted-foreground">Price:</span>
+                                                    <span className="font-semibold text-foreground">
                                                         {provider.outputPrice?.toFixed(4)} 0G/image
                                                     </span>
                                                 </div>
@@ -185,21 +154,21 @@ export function ProviderCard({
                                                 <>
                                                     {provider.inputPrice !== undefined && (
                                                         <div className="flex items-center gap-1">
-                                                            <span className="text-gray-600">Input:</span>
-                                                            <span className="font-semibold text-gray-900">
+                                                            <span className="text-muted-foreground">In:</span>
+                                                            <span className="font-semibold text-foreground">
                                                                 {provider.inputPrice.toFixed(2)}
                                                             </span>
                                                         </div>
                                                     )}
                                                     {provider.outputPrice !== undefined && (
                                                         <div className="flex items-center gap-1">
-                                                            <span className="text-gray-600">Output:</span>
-                                                            <span className="font-semibold text-gray-900">
+                                                            <span className="text-muted-foreground">Out:</span>
+                                                            <span className="font-semibold text-foreground">
                                                                 {provider.outputPrice.toFixed(2)}
                                                             </span>
                                                         </div>
                                                     )}
-                                                    <span className="text-gray-500">0G/1M tokens</span>
+                                                    <span className="text-muted-foreground">0G/1M</span>
                                                 </>
                                             )}
                                         </div>
@@ -217,7 +186,7 @@ export function ProviderCard({
                                                     {provider.outputPrice !== undefined && (
                                                         <p>Output (AI response): {provider.outputPrice.toFixed(4)} 0G per 1M tokens</p>
                                                     )}
-                                                    <p className="text-gray-400 mt-1 text-xs">~{((provider.inputPrice || 0) + (provider.outputPrice || 0)).toFixed(4)} 0G per typical message</p>
+                                                    <p className="text-muted-foreground mt-1 text-xs">~{((provider.inputPrice || 0) + (provider.outputPrice || 0)).toFixed(4)} 0G per typical message</p>
                                                 </>
                                             )}
                                         </div>
@@ -229,7 +198,7 @@ export function ProviderCard({
                             <div className="flex items-center gap-1">
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <code className="text-xs text-gray-500 font-mono bg-gray-50 px-2 py-1 rounded cursor-default">
+                                        <code className="text-xs text-muted-foreground font-mono bg-muted px-2 py-1 rounded-md cursor-default">
                                             {truncatedAddress}
                                         </code>
                                     </TooltipTrigger>
@@ -242,7 +211,7 @@ export function ProviderCard({
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-6 w-6 text-gray-400 hover:text-gray-600"
+                                            className="h-6 w-6 text-muted-foreground hover:text-primary"
                                             onClick={copyAddress}
                                         >
                                             <Copy className="h-3 w-3" />
@@ -258,7 +227,7 @@ export function ProviderCard({
                 </div>
 
                 {/* Action buttons */}
-                <div className="flex gap-1 mt-1">
+                <div className="flex gap-2 mt-4">
                     {isDisabled ? (
                         <>
                             {isChatService && (
@@ -268,7 +237,7 @@ export function ProviderCard({
                                     className="flex-1 text-xs cursor-not-allowed"
                                     disabled
                                 >
-                                    <MessageCircle className="h-3 w-3 mr-1" />
+                                    <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
                                     Chat
                                 </Button>
                             )}
@@ -279,7 +248,7 @@ export function ProviderCard({
                                     className="flex-1 text-xs cursor-not-allowed"
                                     disabled
                                 >
-                                    <Image className="h-3 w-3 mr-1" />
+                                    <Image className="h-3.5 w-3.5 mr-1.5" />
                                     Generate
                                 </Button>
                             )}
@@ -290,7 +259,7 @@ export function ProviderCard({
                                     className="flex-1 text-xs cursor-not-allowed"
                                     disabled
                                 >
-                                    <Mic className="h-3 w-3 mr-1" />
+                                    <Mic className="h-3.5 w-3.5 mr-1.5" />
                                     Transcribe
                                 </Button>
                             )}
@@ -300,7 +269,7 @@ export function ProviderCard({
                                 className="flex-1 text-xs cursor-not-allowed"
                                 disabled
                             >
-                                <Code className="h-3 w-3 mr-1" />
+                                <Code className="h-3.5 w-3.5 mr-1.5" />
                                 Build
                             </Button>
                         </>
@@ -308,34 +277,34 @@ export function ProviderCard({
                         <>
                             {isChatService && onChat && (
                                 <Button
-                                    variant="outline"
+                                    variant="default"
                                     size="sm"
-                                    className="flex-1 text-xs text-gray-600 border-gray-300 hover:text-purple-600 hover:bg-purple-50 hover:border-purple-200"
+                                    className="flex-1 text-xs"
                                     onClick={() => onChat(provider)}
                                 >
-                                    <MessageCircle className="h-3 w-3 mr-1" />
+                                    <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
                                     Chat
                                 </Button>
                             )}
                             {isImageService && onImageGen && (
                                 <Button
-                                    variant="outline"
+                                    variant="default"
                                     size="sm"
-                                    className="flex-1 text-xs text-gray-600 border-gray-300 hover:text-purple-600 hover:bg-purple-50 hover:border-purple-200"
+                                    className="flex-1 text-xs"
                                     onClick={() => onImageGen(provider)}
                                 >
-                                    <Image className="h-3 w-3 mr-1" />
+                                    <Image className="h-3.5 w-3.5 mr-1.5" />
                                     Generate
                                 </Button>
                             )}
                             {isSpeechService && onSpeechToText && (
                                 <Button
-                                    variant="outline"
+                                    variant="default"
                                     size="sm"
-                                    className="flex-1 text-xs text-gray-600 border-gray-300 hover:text-purple-600 hover:bg-purple-50 hover:border-purple-200"
+                                    className="flex-1 text-xs"
                                     onClick={() => onSpeechToText(provider)}
                                 >
-                                    <Mic className="h-3 w-3 mr-1" />
+                                    <Mic className="h-3.5 w-3.5 mr-1.5" />
                                     Transcribe
                                 </Button>
                             )}
@@ -343,10 +312,10 @@ export function ProviderCard({
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="flex-1 text-xs text-gray-600 border-gray-300 hover:text-purple-600 hover:bg-purple-50 hover:border-purple-200"
+                                    className="flex-1 text-xs"
                                     onClick={() => onBuild(provider)}
                                 >
-                                    <Code className="h-3 w-3 mr-1" />
+                                    <Code className="h-3.5 w-3.5 mr-1.5" />
                                     Build
                                 </Button>
                             )}
@@ -356,12 +325,11 @@ export function ProviderCard({
 
                 {/* Unverified notice */}
                 {!isVerified && (
-                    <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-md">
+                    <div className="mt-3 p-2.5 bg-red-50 border border-red-200 rounded-lg">
                         <div className="flex items-start">
-                            <AlertCircle className="h-3 w-3 text-red-500 mr-1 mt-0.5 flex-shrink-0" />
+                            <AlertCircle className="h-4 w-4 text-red-500 mr-2 flex-shrink-0" />
                             <p className="text-xs text-red-700">
-                                This provider has not been verified and cannot be used
-                                until verification is complete.
+                                This provider has not been verified and cannot be used until verification is complete.
                             </p>
                         </div>
                     </div>

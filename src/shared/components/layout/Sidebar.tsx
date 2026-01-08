@@ -25,8 +25,8 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r border-purple-200 bg-white sm:flex">
-      <nav className="flex flex-col items-center gap-4 px-2 sm:py-5">
+    <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r border-border bg-card sm:flex">
+      <nav className="flex flex-col items-center gap-3 px-2 sm:py-5">
         <TooltipProvider>
           {links.map(({ href, label, icon: Icon }) => (
             <Tooltip key={href}>
@@ -35,15 +35,17 @@ export function Sidebar() {
                 <a
                   href={href}
                   className={cn(
-                    "flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 transition-colors hover:text-gray-900 md:h-8 md:w-8",
-                    isActive(href) && "bg-purple-100 text-purple-700"
+                    "flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground transition-all duration-200 hover:text-primary hover:bg-secondary",
+                    isActive(href) && "bg-primary text-primary-foreground shadow-glow"
                   )}
                 >
                   <Icon className="h-5 w-5" />
                   <span className="sr-only">{label}</span>
                 </a>
               </TooltipTrigger>
-              <TooltipContent side="right">{label}</TooltipContent>
+              <TooltipContent side="right" className="bg-card border-border">
+                {label}
+              </TooltipContent>
             </Tooltip>
           ))}
         </TooltipProvider>

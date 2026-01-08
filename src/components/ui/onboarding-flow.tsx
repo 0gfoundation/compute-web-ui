@@ -69,7 +69,7 @@ export function OnboardingFlow({
                     {({ openConnectModal }) => (
                         <Button
                             onClick={openConnectModal}
-                            className="bg-purple-600 hover:bg-purple-700"
+                            variant="gradient"
                             size="sm"
                         >
                             Connect Wallet
@@ -88,10 +88,10 @@ export function OnboardingFlow({
             action: isConnected && !hasBalance ? (
                 <Button
                     onClick={onDepositClick}
-                    className="bg-purple-600 hover:bg-purple-700"
+                    variant="gradient"
                     size="sm"
                 >
-                    Add 5 0G
+                    Add Funds
                 </Button>
             ) : null,
         },
@@ -106,7 +106,6 @@ export function OnboardingFlow({
                 <Button
                     onClick={onSelectProviderClick}
                     variant="outline"
-                    className="border-purple-300 text-purple-600 hover:bg-purple-50"
                     size="sm"
                 >
                     Browse Providers
@@ -123,7 +122,7 @@ export function OnboardingFlow({
             action: hasProvider ? (
                 <Button
                     onClick={onStartChatClick}
-                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                    variant="gradient"
                     size="sm"
                 >
                     <Sparkles className="h-4 w-4 mr-2" />
@@ -136,7 +135,7 @@ export function OnboardingFlow({
     // If user has completed onboarding, show a minimal view
     if (isConnected && hasBalance && hasProvider) {
         return (
-            <Card className={cn("bg-gradient-to-r from-purple-50 to-blue-50 border-purple-100", className)}>
+            <Card className={cn("bg-gradient-subtle border-primary/20", className)}>
                 <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -144,13 +143,13 @@ export function OnboardingFlow({
                                 <Check className="h-5 w-5 text-green-600" />
                             </div>
                             <div>
-                                <h3 className="font-semibold text-gray-900">You&apos;re all set!</h3>
-                                <p className="text-sm text-gray-600">Ready to use decentralized AI services</p>
+                                <h3 className="font-semibold text-foreground">You&apos;re all set!</h3>
+                                <p className="text-sm text-muted-foreground">Ready to use decentralized AI services</p>
                             </div>
                         </div>
                         <Button
                             onClick={onStartChatClick}
-                            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                            variant="gradient"
                         >
                             <MessageSquare className="h-4 w-4 mr-2" />
                             Go to Chat
@@ -163,10 +162,10 @@ export function OnboardingFlow({
     }
 
     return (
-        <Card className={cn("bg-white border-gray-200", className)}>
+        <Card className={cn("border-border", className)}>
             <CardHeader className="pb-4">
                 <CardTitle className="text-lg flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-purple-600" />
+                    <Sparkles className="h-5 w-5 text-primary" />
                     Get Started with 0G Compute
                 </CardTitle>
                 <CardDescription>
@@ -174,28 +173,28 @@ export function OnboardingFlow({
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-3">
                     {steps.map((step, index) => (
                         <div
                             key={step.id}
                             className={cn(
-                                "flex items-start gap-4 p-4 rounded-lg transition-all",
-                                step.current && "bg-purple-50 border border-purple-200",
-                                step.completed && "bg-gray-50",
+                                "flex items-start gap-4 p-4 rounded-xl transition-all duration-200",
+                                step.current && "bg-secondary border border-primary/20 shadow-sm",
+                                step.completed && "bg-muted/50",
                                 !step.current && !step.completed && "opacity-50"
                             )}
                         >
                             {/* Step number/check */}
                             <div className={cn(
-                                "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
+                                "w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-200",
                                 step.completed && "bg-green-100 text-green-600",
-                                step.current && !step.completed && "bg-purple-100 text-purple-600",
-                                !step.current && !step.completed && "bg-gray-100 text-gray-400"
+                                step.current && !step.completed && "bg-primary text-primary-foreground shadow-glow",
+                                !step.current && !step.completed && "bg-muted text-muted-foreground"
                             )}>
                                 {step.completed ? (
                                     <Check className="h-4 w-4" />
                                 ) : (
-                                    <span className="text-sm font-medium">{step.id}</span>
+                                    <span className="text-sm font-semibold">{step.id}</span>
                                 )}
                             </div>
 
@@ -203,27 +202,28 @@ export function OnboardingFlow({
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
                                     <span className={cn(
-                                        step.current ? "text-purple-600" : "text-gray-400"
+                                        "transition-colors duration-200",
+                                        step.current ? "text-primary" : "text-muted-foreground"
                                     )}>
                                         {step.icon}
                                     </span>
                                     <h4 className={cn(
                                         "font-medium",
                                         step.completed && "text-green-700",
-                                        step.current && "text-purple-900",
-                                        !step.current && !step.completed && "text-gray-500"
+                                        step.current && "text-foreground",
+                                        !step.current && !step.completed && "text-muted-foreground"
                                     )}>
                                         {step.title}
                                     </h4>
                                     {step.completed && (
-                                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
                                             Done
                                         </span>
                                     )}
                                 </div>
                                 <p className={cn(
                                     "text-sm mt-1",
-                                    step.current ? "text-gray-600" : "text-gray-400"
+                                    step.current ? "text-muted-foreground" : "text-muted-foreground/70"
                                 )}>
                                     {step.description}
                                 </p>
@@ -238,21 +238,21 @@ export function OnboardingFlow({
 
                             {/* Arrow to next step */}
                             {index < steps.length - 1 && step.completed && (
-                                <ChevronRight className="h-5 w-5 text-gray-300 flex-shrink-0" />
+                                <ChevronRight className="h-5 w-5 text-muted-foreground/50 flex-shrink-0" />
                             )}
                         </div>
                     ))}
                 </div>
 
                 {/* Progress indicator */}
-                <div className="mt-6 pt-4 border-t border-gray-100">
-                    <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
+                <div className="mt-6 pt-4 border-t border-border">
+                    <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
                         <span>Progress</span>
-                        <span>{Math.round(((currentStep - 1) / 4) * 100)}% complete</span>
+                        <span className="font-mono">{Math.round(((currentStep - 1) / 4) * 100)}%</span>
                     </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2">
+                    <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
                         <div
-                            className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-500"
+                            className="bg-gradient-brand h-2 rounded-full transition-all duration-500"
                             style={{ width: `${((currentStep - 1) / 4) * 100}%` }}
                         />
                     </div>
